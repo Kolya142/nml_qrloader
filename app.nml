@@ -1,0 +1,19 @@
+load 'Hello, qr\n'
+    pop msg
+
+out msg
+
+load 0
+    pop a
+load 10
+    pop b
+
+loop a lower b l1
+
+def l1
+    push a
+    pop v
+    str v
+    out v
+    inc a
+ret
