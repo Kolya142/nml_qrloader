@@ -1,19 +1,15 @@
-load 'Hello, qr\n'
-    pop msg
+rnd t
+push t
 
-out msg
+unx t
+mul t
 
-load 0
-    pop a
-load 10
-    pop b
+rnd T
+push T
+mul t
 
-loop a lower b l1
+load 500
+mod t
 
-def l1
-    push a
-    pop v
-    str v
-    out v
-    inc a
-ret
+str t
+out t

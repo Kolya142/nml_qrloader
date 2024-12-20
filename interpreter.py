@@ -75,6 +75,8 @@ def interpreter(bytecode: bytes, state: State) -> None:
                     state.variables[a] = state.variables[a] ** 0.5
                 case 'rnd':
                     state.variables[a] = random.randint(0, 100)
+                case 'unx':
+                    state.variables[a] = int(time.time())
                 case 'str':
                     state.variables[a] = parse_int(f"'{state.variables[a]}'")
                 # case 'sys':

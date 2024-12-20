@@ -1,43 +1,54 @@
-import base64
 import os
-import time
 import zlib
+import cv2
+import time
+import pyzbar
+import pyzbar.pyzbar
 import compress
-import subprocess
+import interpreter
 
-
-CAMERAFILE = "/dev/video0"
-
-if os.name != 'nt':
-    process = subprocess.Popen(['zbarcam', CAMERAFILE], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-else:
-    process = subprocess.Popen(['start', 'zbarcam', CAMERAFILE], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-
-
-
+camera = cv2.VideoCapture(0)
 while True:
-    time.sleep(0.5)
-    print("scanning")
+    _, frame = camera.read()
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY, dstCn=0)
+
+    W, H = frame.shape
+
+    codes = pyzbar.pyzbar.decode(frame)
+
+    frame = cv2.resize(frame, (500, 500))
+    
+    cv2.imshow("qr scanner", frame)
+
+    if cv2.waitKey(1) & 0xff == 27:
+        cv2.destroyAllWindows()
+        break
+
+    if len(codes) != 1:
+        continue
+
     try:
-        d = process.stdout.readline().decode('utf-8').strip()
+        d = codes[0].data.decode('utf-8')
     except UnicodeDecodeError as e:
         print(f'incorrect qr: {e.__str__()}')
         continue
     if not d:
         continue
-    if d.startswith("QR-Code:"):
-        try:
-            d = d.split("QR-Code:")[1].strip()
-            print(f'qr data: {d}')
-            d = compress.decompress(d)
-        except (ValueError, zlib.error) as e:
-            print(f'incorrect qr: {e.__str__()}')
-            continue
-        try:
-            with open("app1.nmlx", 'wb') as f1:
-                f1.write(d)
-            process.kill()
-            os.system(f"python3 interpreter.py byte app1.nmlx")
-            exit()
-        except Exception:
-            pass
+    try:
+        print(f'qr data: {d}')
+        d = compress.decompress(d)
+        print(f'qr data: {d}')
+    except (ValueError, zlib.error) as e:
+        print(f'incorrect qr: {e.__str__()}')
+        continue
+    try:
+        cv2.destroyAllWindows()
+        interpreter.interpreter(d, interpreter.State({}, {}, []))
+        time.sleep(0.1)
+        if os.name != 'nt':
+            os.system("bash -c 'read -s -n 1 -p \"Press any key to continue...\"'")
+        else:
+            os.system("pause")
+        exit()
+    except Exception:
+        pass
